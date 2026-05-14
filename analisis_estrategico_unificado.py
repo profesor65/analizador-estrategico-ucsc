@@ -291,27 +291,73 @@ def mostrar_seccion_pestel():
     return respuestas
 
 def mostrar_seccion_foda():
-    st.header("⚡ Análisis FODA (Importancia de cada factor)")
-    st.markdown("Evalúe la importancia de cada factor para su organización (1 = Nada importante, 5 = Muy importante).")
+    st.header("⚡ Análisis FODA (Personalizado)")
+    st.markdown("""
+    **Instrucciones:**  
+    Escribe hasta **5 factores** para cada cuadrante (Fortalezas, Debilidades, Oportunidades, Amenazas).  
+    Luego, en el slider, indica la **importancia** de ese factor para tu organización (1 = Nada importante, 5 = Muy importante).  
+    *Deja los campos de texto vacíos si no necesitas usar los 5.*
+    """)
     
     respuestas = {}
-    for cuadrante, lista_enunciados in FODA_FACTORES.items():
+    
+    # Definir los cuadrantes
+    cuadrantes = ["Fortalezas", "Debilidades", "Oportunidades", "Amenazas"]
+    
+    for cuadrante in cuadrantes:
         st.subheader(f"📌 {cuadrante}")
-        cols = st.columns(2)
-        for idx, enunciado in enumerate(lista_enunciados):
-            key = f"foda_{cuadrante}_{idx}"
-            if key not in st.session_state:
-                st.session_state[key] = 3
-            with cols[idx % 2]:
-                respuesta = st.select_slider(
-                    enunciado,
-                    options=[1, 2, 3, 4, 5],
-                    key=key,
-                    format_func=lambda x: {1:"1 - Nada importante", 2:"2 - Poco importante", 3:"3 - Moderado", 4:"4 - Importante", 5:"5 - Muy importante"}[x]
+        
+        # Creamos 5 filas (texto + slider) para este cuadrante
+        for i in range(1, 6):
+            # Claves únicas para cada campo de texto y slider
+            text_key = f"foda_text_{cuadrante}_{i}"
+            slider_key = f"foda_slider_{cuadrante}_{i}"
+            
+            # Inicializar valores en session_state si no existen
+            if text_key not in st.session_state:
+                st.session_state[text_key] = ""
+            if slider_key not in st.session_state:
+                st.session_state[slider_key] = 3  # valor neutro por defecto
+            
+            # Usar dos columnas: texto (70%) y slider (30%)
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                factor_texto = st.text_input(
+                    f"Factor {i}",
+                    value=st.session_state[text_key],
+                    key=text_key,
+                    placeholder=f"Ej. {obtener_ejemplo(cuadrante, i)}"
                 )
-                respuestas[f"{cuadrante}: {enunciado[:50]}..."] = respuesta
+            with col2:
+                importancia = st.select_slider(
+                    "Importancia",
+                    options=[1, 2, 3, 4, 5],
+                    value=st.session_state[slider_key],
+                    key=slider_key,
+                    label_visibility="collapsed"
+                )
+            
+            # Solo guardamos si el usuario escribió algo
+            if factor_texto.strip():
+                clave_respuesta = f"{cuadrante}: {factor_texto.strip()}"
+                respuestas[clave_respuesta] = importancia
+        
         st.markdown("---")
+    
     return respuestas
+
+def obtener_ejemplo(cuadrante, i):
+    """Devuelve un ejemplo según el cuadrante y el número (opcional)"""
+    ejemplos = {
+        "Fortalezas": ["Marca reconocida", "Equipo calificado", "Tecnología propia", "Bajos costos", "Lealtad de clientes"],
+        "Debilidades": ["Falta de capital", "Tecnología obsoleta", "Poca presencia digital", "Alta rotación", "Dependencia de pocos clientes"],
+        "Oportunidades": ["Nuevos mercados", "Cambios regulatorios", "Tendencias verdes", "Alianzas estratégicas", "Subsidios"],
+        "Amenazas": ["Nuevos competidores", "Crisis económica", "Cambios de gustos", "Aumento de costos", "Regulaciones estrictas"]
+    }
+    lista = ejemplos.get(cuadrante, [""] * 5)
+    if i-1 < len(lista):
+        return lista[i-1]
+    return ""
 
 # ============================================================
 # FUNCIÓN PARA GENERAR EXCEL
