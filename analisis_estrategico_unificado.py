@@ -246,26 +246,112 @@ def mostrar_seccion_porter():
     return respuestas
 
 def mostrar_seccion_pestel():
-    st.header("🌍 Análisis PESTEL del Macroentorno")
-    st.markdown("Evalúe cada afirmación (1 = Muy negativo/desfavorable, 5 = Muy positivo/favorable).")
+    st.header("🌍 Análisis PESTEL del Macroentorno (Personalizado)")
+    st.markdown("""
+    **Instrucciones:**  
+    Para cada categoría, edita los factores (o escribe los tuyos propios) y asigna su importancia en la escala Likert.  
+    Puedes dejar campos vacíos si no necesitas usar los 5.  
+    La escala es:  
+    1 = Muy negativo/desfavorable, 2 = Negativo, 3 = Neutral, 4 = Positivo, 5 = Muy positivo/favorable.
+    """)
     
     respuestas = {}
-    for factor, lista_enunciados in PESTEL_FACTORES.items():
-        st.subheader(f"📌 {factor}")
-        cols = st.columns(2)
-        for idx, enunciado in enumerate(lista_enunciados):
-            key = f"pestel_{factor}_{idx}"
-            if key not in st.session_state:
-                st.session_state[key] = 3
-            with cols[idx % 2]:
-                respuesta = st.select_slider(
-                    enunciado,
-                    options=[1, 2, 3, 4, 5],
-                    key=key,
-                    format_func=lambda x: {1:"1 - Muy negativo", 2:"2 - Negativo", 3:"3 - Neutral", 4:"4 - Positivo", 5:"5 - Muy positivo"}[x]
+    
+    # Factores predefinidos (editables)
+    pestel_predefinido = {
+        "Político": [
+            "La estabilidad política del país es alta y predecible.",
+            "Las políticas fiscales (impuestos) son favorables para el negocio.",
+            "Las políticas de comercio exterior son abiertas y facilitan la importación/exportación.",
+            "Las regulaciones laborales son flexibles y no encarecen excesivamente el empleo.",
+            "La presión de grupos de interés o lobby es baja o favorable."
+        ],
+        "Económico": [
+            "El crecimiento del PIB es alto y sostenido.",
+            "La tasa de inflación es baja y controlada.",
+            "El tipo de cambio es estable y competitivo para nuestras operaciones.",
+            "La tasa de desempleo es baja, lo que indica una economía saludable.",
+            "El acceso al crédito y financiamiento es amplio y con tasas razonables."
+        ],
+        "Social": [
+            "Los cambios demográficos (envejecimiento, migración) benefician nuestro mercado.",
+            "El nivel educativo de la población es alto y calificado.",
+            "Los estilos de vida y preferencias del consumidor están alineados con nuestra oferta.",
+            "La conciencia social y de salud es elevada y favorece nuestros productos.",
+            "La desigualdad en la distribución de la renta es baja, existiendo una clase media amplia."
+        ],
+        "Tecnológico": [
+            "La inversión en I+D e innovación en el sector es alta y constante.",
+            "El nivel de digitalización y automatización del sector es avanzado (Industria 4.0).",
+            "El acceso a internet y tecnologías de la información es universal y de alta velocidad.",
+            "La transferencia tecnológica desde universidades o centros de investigación es fluida.",
+            "La ciberseguridad y protección de datos están garantizadas por normas robustas."
+        ],
+        "Ecológico / Ambiental": [
+            "Las regulaciones ambientales son claras y no excesivamente costosas.",
+            "El cambio climático y eventos extremos tienen un impacto bajo en nuestras operaciones.",
+            "Los consumidores tienen una alta conciencia ecológica que favorece nuestra propuesta verde.",
+            "La disponibilidad de recursos naturales es abundante y a precios razonables.",
+            "Los costos de la energía sostenible son bajos o están subvencionados."
+        ],
+        "Legal": [
+            "La seguridad jurídica y cumplimiento de contratos son excelentes.",
+            "La protección de la propiedad intelectual (patentes, marcas) es fuerte.",
+            "Las leyes de competencia (antimonopolio) son efectivas y justas.",
+            "La legislación laboral es equilibrada y no genera conflictos.",
+            "Las leyes de protección al consumidor son rigurosas y nos benefician (generan confianza)."
+        ]
+    }
+    
+    # Guías de análisis por categoría (estilo FODA)
+    guias = {
+        "Político": "🏛️ **Pista:** Analiza la estabilidad gubernamental, políticas fiscales, comercio exterior, regulaciones laborales y presión de grupos de interés. Pregúntate: ¿El entorno político favorece o perjudica al negocio?",
+        "Económico": "📈 **Pista:** Considera crecimiento del PIB, inflación, tipo de cambio, desempleo y acceso al crédito. ¿La economía es favorable para invertir y vender?",
+        "Social": "👥 **Pista:** Reflexiona sobre demografía, educación, estilos de vida, conciencia social y desigualdad. ¿Las tendencias sociales apoyan tu producto o servicio?",
+        "Tecnológico": "💻 **Pista:** Evalúa I+D, digitalización, acceso a internet, transferencia tecnológica y ciberseguridad. ¿La tecnología es una aliada o una barrera?",
+        "Ecológico / Ambiental": "🌿 **Pista:** Observa regulaciones ambientales, cambio climático, conciencia ecológica, disponibilidad de recursos y costos de energía sostenible. ¿El entorno ecológico te da ventajas o riesgos?",
+        "Legal": "⚖️ **Pista:** Examina seguridad jurídica, propiedad intelectual, leyes de competencia, legislación laboral y protección al consumidor. ¿El marco legal es predecible y protector?"
+    }
+    
+    for categoria, lista_factores in pestel_predefinido.items():
+        st.subheader(f"📌 {categoria}")
+        st.info(guias[categoria])   # <--- Aquí está la guía como en FODA
+        
+        for i in range(1, 6):
+            text_key = f"pestel_text_{categoria}_{i}"
+            slider_key = f"pestel_slider_{categoria}_{i}"
+            
+            if text_key not in st.session_state:
+                if i-1 < len(lista_factores):
+                    st.session_state[text_key] = lista_factores[i-1]
+                else:
+                    st.session_state[text_key] = ""
+            if slider_key not in st.session_state:
+                st.session_state[slider_key] = 3
+            
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                factor_texto = st.text_input(
+                    f"Factor {i}",
+                    value=st.session_state[text_key],
+                    key=text_key,
+                    placeholder="Escribe o modifica el factor"
                 )
-                respuestas[f"{factor}: {enunciado[:50]}..."] = respuesta
+            with col2:
+                importancia = st.select_slider(
+                    "Importancia",
+                    options=[1, 2, 3, 4, 5],
+                    value=st.session_state[slider_key],
+                    key=slider_key,
+                    label_visibility="collapsed"
+                )
+            
+            if factor_texto.strip():
+                clave_respuesta = f"{categoria}: {factor_texto.strip()}"
+                respuestas[clave_respuesta] = importancia
+        
         st.markdown("---")
+    
     return respuestas
 
 def mostrar_seccion_foda():
