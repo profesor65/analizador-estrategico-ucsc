@@ -24,6 +24,34 @@ st.set_page_config(
 )
 
 # ============================================================
+# VERIFICACIÓN DE ACCESO CON CONTRASEÑA (desde Secrets)
+# ============================================================
+# Intenta leer la contraseña desde los secrets de Streamlit Cloud
+# Si no existe, usa una contraseña por defecto (cámbiala)
+try:
+    PASSWORD = st.secrets["PASSWORD"]
+except:
+    PASSWORD = "UCSC2026"  # fallback si no está en secrets
+
+# Inicializar estado de autenticación
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+# Si no está autenticado, mostrar pantalla de login
+if not st.session_state.authenticated:
+    st.title("🔒 Acceso restringido")
+    st.markdown("### Facultad de Ciencias Económicas y Administrativas - FACEA UCSC")
+    password_input = st.text_input("Ingrese la contraseña para acceder a la herramienta:", type="password")
+    if st.button("Ingresar"):
+        if password_input == PASSWORD:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Contraseña incorrecta. Acceso denegado.")
+    st.stop()  # Detiene la ejecución del resto de la app
+# ============================================================
+
+# ============================================================
 # ESTILO PERSONALIZADO (ocultar opciones de Streamlit)
 # ============================================================
 hide_streamlit_style = """
