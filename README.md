@@ -1,2 +1,2 @@
 # analizador-estrategico-ucsc
-Aplicación interactiva para el análisis estratégico (PORTER, PESTEL y FODA) - FACEA UCSC
+Interactive application for strategic analysis (PORTER, PESTEL and SWOT) - Faculty of Economic and Administrative Sciences (FACEA) Catholic University of the Most Holy Conception (UCSC) - Chile
