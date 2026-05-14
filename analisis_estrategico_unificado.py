@@ -300,26 +300,30 @@ def mostrar_seccion_foda():
     """)
     
     respuestas = {}
-    
-    # Definir los cuadrantes
     cuadrantes = ["Fortalezas", "Debilidades", "Oportunidades", "Amenazas"]
+    
+    # Diccionario de guías / pistas por cuadrante
+    guias = {
+        "Fortalezas": "🔍 **Pista:** Piensa en qué hace bien tu organización, qué recursos valiosos tienes, en qué eres mejor que la competencia. Ejemplo: *'Marca reconocida'*, *'Equipo con alta experiencia'*.",
+        "Debilidades": "⚠️ **Pista:** Reflexiona sobre limitaciones internas, aspectos a mejorar, carencias de recursos o capacidades. Ejemplo: *'Falta de capital de trabajo'*, *'Tecnología obsoleta'*.",
+        "Oportunidades": "🌱 **Pista:** Observa tendencias externas favorables, necesidades insatisfechas, cambios en el mercado o regulaciones que te beneficien. Ejemplo: *'Crecimiento del comercio electrónico'*, *'Nuevos nichos de mercado'*.",
+        "Amenazas": "⚡ **Pista:** Identifica factores externos que puedan perjudicarte: nuevos competidores, crisis económicas, cambios regulatorios adversos. Ejemplo: *'Entrada de competidores internacionales'*, *'Aumento de costos de materias primas'*."
+    }
     
     for cuadrante in cuadrantes:
         st.subheader(f"📌 {cuadrante}")
+        # Mostrar la guía en un recuadro sutil
+        st.info(guias[cuadrante])
         
-        # Creamos 5 filas (texto + slider) para este cuadrante
         for i in range(1, 6):
-            # Claves únicas para cada campo de texto y slider
             text_key = f"foda_text_{cuadrante}_{i}"
             slider_key = f"foda_slider_{cuadrante}_{i}"
             
-            # Inicializar valores en session_state si no existen
             if text_key not in st.session_state:
                 st.session_state[text_key] = ""
             if slider_key not in st.session_state:
-                st.session_state[slider_key] = 3  # valor neutro por defecto
+                st.session_state[slider_key] = 3
             
-            # Usar dos columnas: texto (70%) y slider (30%)
             col1, col2 = st.columns([3, 1])
             with col1:
                 factor_texto = st.text_input(
@@ -337,7 +341,6 @@ def mostrar_seccion_foda():
                     label_visibility="collapsed"
                 )
             
-            # Solo guardamos si el usuario escribió algo
             if factor_texto.strip():
                 clave_respuesta = f"{cuadrante}: {factor_texto.strip()}"
                 respuestas[clave_respuesta] = importancia
@@ -345,20 +348,6 @@ def mostrar_seccion_foda():
         st.markdown("---")
     
     return respuestas
-
-def obtener_ejemplo(cuadrante, i):
-    """Devuelve un ejemplo según el cuadrante y el número (opcional)"""
-    ejemplos = {
-        "Fortalezas": ["Marca reconocida", "Equipo calificado", "Tecnología propia", "Bajos costos", "Lealtad de clientes"],
-        "Debilidades": ["Falta de capital", "Tecnología obsoleta", "Poca presencia digital", "Alta rotación", "Dependencia de pocos clientes"],
-        "Oportunidades": ["Nuevos mercados", "Cambios regulatorios", "Tendencias verdes", "Alianzas estratégicas", "Subsidios"],
-        "Amenazas": ["Nuevos competidores", "Crisis económica", "Cambios de gustos", "Aumento de costos", "Regulaciones estrictas"]
-    }
-    lista = ejemplos.get(cuadrante, [""] * 5)
-    if i-1 < len(lista):
-        return lista[i-1]
-    return ""
-
 # ============================================================
 # FUNCIÓN PARA GENERAR EXCEL
 # ============================================================
