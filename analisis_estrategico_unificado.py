@@ -203,43 +203,24 @@ PESTEL_FACTORES = {
     ]
 }
 
-FODA_FACTORES = {
-    "Fortalezas": [
-        "La empresa cuenta con una marca muy reconocida y excelente reputación.",
-        "Los recursos financieros son sólidos y permiten inversiones.",
-        "Se dispone de tecnología propia o ventaja técnica significativa.",
-        "El equipo humano está altamente calificado y comprometido.",
-        "Los clientes muestran un alto grado de lealtad.",
-        "La eficiencia operativa y los costos son bajos comparados con la competencia."
-    ],
-    "Debilidades": [
-        "La empresa depende excesivamente de pocos clientes.",
-        "La tecnología utilizada es obsoleta y limita la competitividad.",
-        "Existe falta de capital de trabajo para financiar operaciones.",
-        "La presencia digital y marketing online son muy débiles.",
-        "La rotación de personal es alta, generando inestabilidad.",
-        "Los márgenes de beneficio son reducidos."
-    ],
-    "Oportunidades": [
-        "Existen oportunidades en nuevos mercados geográficos no explotados.",
-        "Cambios regulatorios recientes favorecen al sector.",
-        "Las tendencias de consumo (sostenibilidad, digitalización) abren nuevos nichos.",
-        "Es posible realizar alianzas estratégicas con socios complementarios.",
-        "Hay subsidios o incentivos gubernamentales disponibles.",
-        "Los avances tecnológicos pueden aplicarse fácilmente al negocio."
-    ],
-    "Amenazas": [
-        "Están entrando nuevos competidores agresivos al mercado.",
-        "La economía atraviesa una crisis o recesión que afecta la demanda.",
-        "Los gustos y preferencias de los consumidores están cambiando rápidamente.",
-        "Los costos de materias primas están aumentando sin control.",
-        "Se avecinan regulaciones más estrictas que encarecerán la operación.",
-        "Existen productos sustitutos disruptivos que amenazan nuestro modelo."
-    ]
-}
+# ============================================================
+# FUNCIÓN AUXILIAR PARA EJEMPLOS EN FODA
+# ============================================================
+def obtener_ejemplo(cuadrante, i):
+    """Devuelve un ejemplo según el cuadrante y el número (opcional)"""
+    ejemplos = {
+        "Fortalezas": ["Marca reconocida", "Equipo calificado", "Tecnología propia", "Bajos costos", "Lealtad de clientes"],
+        "Debilidades": ["Falta de capital", "Tecnología obsoleta", "Poca presencia digital", "Alta rotación", "Dependencia de pocos clientes"],
+        "Oportunidades": ["Nuevos mercados", "Cambios regulatorios", "Tendencias verdes", "Alianzas estratégicas", "Subsidios"],
+        "Amenazas": ["Nuevos competidores", "Crisis económica", "Cambios de gustos", "Aumento de costos", "Regulaciones estrictas"]
+    }
+    lista = ejemplos.get(cuadrante, [""] * 5)
+    if i-1 < len(lista):
+        return lista[i-1]
+    return ""
 
 # ============================================================
-# FUNCIONES PARA MOSTRAR SECCIONES (CORREGIDAS)
+# FUNCIONES PARA MOSTRAR SECCIONES
 # ============================================================
 def mostrar_seccion_porter():
     st.header("🏛️ Análisis de las 5 Fuerzas de Porter")
@@ -251,18 +232,15 @@ def mostrar_seccion_porter():
         cols = st.columns(2)
         for idx, enunciado in enumerate(lista_enunciados):
             key = f"porter_{fuerza}_{idx}"
-            # Inicializar si no existe (valor neutro 3)
             if key not in st.session_state:
                 st.session_state[key] = 3
             with cols[idx % 2]:
-                # El widget ya actualiza st.session_state automáticamente
                 respuesta = st.select_slider(
                     enunciado,
                     options=[1, 2, 3, 4, 5],
                     key=key,
                     format_func=lambda x: {1:"1 - Muy en desacuerdo", 2:"2 - En desacuerdo", 3:"3 - Neutral", 4:"4 - De acuerdo", 5:"5 - Muy de acuerdo"}[x]
                 )
-                # Guardamos la respuesta en el diccionario local para devolver
                 respuestas[f"{fuerza}: {enunciado[:50]}..."] = respuesta
         st.markdown("---")
     return respuestas
@@ -302,7 +280,6 @@ def mostrar_seccion_foda():
     respuestas = {}
     cuadrantes = ["Fortalezas", "Debilidades", "Oportunidades", "Amenazas"]
     
-    # Diccionario de guías / pistas por cuadrante
     guias = {
         "Fortalezas": "🔍 **Pista:** Piensa en qué hace bien tu organización, qué recursos valiosos tienes, en qué eres mejor que la competencia. Ejemplo: *'Marca reconocida'*, *'Equipo con alta experiencia'*.",
         "Debilidades": "⚠️ **Pista:** Reflexiona sobre limitaciones internas, aspectos a mejorar, carencias de recursos o capacidades. Ejemplo: *'Falta de capital de trabajo'*, *'Tecnología obsoleta'*.",
@@ -312,7 +289,6 @@ def mostrar_seccion_foda():
     
     for cuadrante in cuadrantes:
         st.subheader(f"📌 {cuadrante}")
-        # Mostrar la guía en un recuadro sutil
         st.info(guias[cuadrante])
         
         for i in range(1, 6):
@@ -348,6 +324,7 @@ def mostrar_seccion_foda():
         st.markdown("---")
     
     return respuestas
+
 # ============================================================
 # FUNCIÓN PARA GENERAR EXCEL
 # ============================================================
@@ -385,7 +362,7 @@ st.header("🧪 Seleccione el análisis a realizar")
 
 tabs = st.tabs(["🏛️ PORTER", "🌍 PESTEL", "⚡ FODA", "📊 Resultados globales"])
 
-# Inicializar variables de sesión para almacenar respuestas (opcional, pero útil)
+# Inicializar variables de sesión para almacenar respuestas
 if 'resp_porter' not in st.session_state:
     st.session_state.resp_porter = {}
 if 'resp_pestel' not in st.session_state:
