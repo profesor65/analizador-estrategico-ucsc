@@ -121,7 +121,6 @@ def mostrar_seccion_porter():
     st.header("🏛️ Análisis de las 5 Fuerzas de Porter")
     st.markdown("Evalúe cada afirmación según la escala Likert (1 = Muy en desacuerdo, 5 = Muy de acuerdo).")
     
-    # Diccionario de factores de Porter (igual al que tenías)
     PORTER_FACTORES = {
         "Amenaza de nuevos competidores": [
             "Las economías de escala representan una barrera de entrada importante en este sector.",
@@ -321,6 +320,10 @@ def mostrar_seccion_ishikawa():
     2. Para cada espina, escribe hasta **5 causas** y asigna su **importancia** (1 = Nada importante, 5 = Muy importante).  
     3. Se mostrarán las causas más críticas.
     """)
+    
+    # Nota sobre las preguntas sugeridas
+    st.info("💡 **Nota:** Las preguntas que aparecen debajo de cada espina son **solo sugerencias** para guiar tu análisis. No es necesario responderlas todas; puedes adaptarlas o agregar otras que consideres relevantes.")
+    
     problema_key = "ishikawa_problema"
     if problema_key not in st.session_state:
         st.session_state[problema_key] = ""
@@ -328,28 +331,98 @@ def mostrar_seccion_ishikawa():
     
     espinas = {
         "👥 Mano de obra": {
-            "guia": "Pregunta: ¿Falta de capacitación? ¿Baja motivación? ¿Rotación?",
-            "factores": ["Falta de capacitación", "Baja motivación", "Alta rotación", "Errores humanos", "Insuficiente personal"]
+            "guia": """
+            **Preguntas sugeridas:**  
+            - ¿El personal tiene las habilidades necesarias?  
+            - ¿Hay problemas de motivación o clima laboral?  
+            - ¿La carga de trabajo es equilibrada?  
+            - ¿Se registran errores frecuentes?
+            """,
+            "factores": [
+                "Falta de capacitación del personal",
+                "Baja motivación / clima laboral negativo",
+                "Alta rotación de personal",
+                "Errores frecuentes en tareas manuales",
+                "Insuficiente número de trabajadores"
+            ]
         },
         "🛠️ Maquinaria": {
-            "guia": "Pregunta: ¿Equipos obsoletos? ¿Falta de mantenimiento? ¿Paradas frecuentes?",
-            "factores": ["Equipos obsoletos", "Mantenimiento insuficiente", "Paradas frecuentes", "Herramientas inadecuadas", "Capacidad insuficiente"]
+            "guia": """
+            **Preguntas sugeridas:**  
+            - ¿Los equipos actuales son modernos y tienen la capacidad para cumplir con los requisitos de producción?  
+            - ¿Se realiza un mantenimiento preventivo y predictivo de forma sistemática y se documenta?  
+            - ¿Cuáles son las causas principales de las paradas no planificadas o el tiempo de inactividad?
+            """,
+            "factores": [
+                "Equipos obsoletos o lentos",
+                "Falta de mantenimiento preventivo",
+                "Paradas no planificadas frecuentes",
+                "Herramientas inadecuadas para la tarea",
+                "Capacidad insuficiente de maquinaria"
+            ]
         },
         "📋 Método": {
-            "guia": "Pregunta: ¿Procedimientos ineficientes? ¿Falta de estandarización?",
-            "factores": ["Procedimientos no estandarizados", "Instrucciones poco claras", "Procesos complejos", "Falta de control", "Mala distribución"]
+            "guia": """
+            **Preguntas sugeridas:**  
+            - ¿Los procedimientos están estandarizados y documentados?  
+            - ¿Existen cuellos de botella o pasos innecesarios?  
+            - ¿La comunicación entre áreas es fluida?  
+            - ¿Se siguen las buenas prácticas del sector?
+            """,
+            "factores": [
+                "Procedimientos no estandarizados",
+                "Instrucciones de trabajo poco claras",
+                "Procesos excesivamente complejos",
+                "Falta de control de calidad en procesos",
+                "Mala distribución de flujo de trabajo"
+            ]
         },
         "📦 Materiales": {
-            "guia": "Pregunta: ¿Materia prima de baja calidad? ¿Problemas con proveedores?",
-            "factores": ["Materia prima baja calidad", "Proveedores poco confiables", "Desabastecimiento", "Exceso inventario", "Materiales inadecuados"]
+            "guia": """
+            **Preguntas sugeridas:**  
+            - ¿La materia prima o insumos cumplen con las especificaciones requeridas?  
+            - ¿Hay problemas con proveedores (plazos, calidad)?  
+            - ¿El inventario es suficiente o hay desabastecimiento?  
+            - ¿Se generan muchos desperdicios?
+            """,
+            "factores": [
+                "Materia prima de baja calidad",
+                "Proveedores poco confiables",
+                "Falta de inventario (desabastecimiento)",
+                "Exceso de inventario (obsolescencia)",
+                "Materiales no adecuados para el proceso"
+            ]
         },
         "📏 Medición": {
-            "guia": "Pregunta: ¿Falta de indicadores? ¿Errores en medición?",
-            "factores": ["Indicadores inadecuados", "Errores en datos", "Falta instrumentos", "Mala calibración", "Retroalimentación tardía"]
+            "guia": """
+            **Preguntas sugeridas:**  
+            - ¿Se miden los indicadores clave de desempeño (KPI)?  
+            - ¿Los datos son confiables y oportunos?  
+            - ¿Los instrumentos de medición están calibrados?  
+            - ¿La retroalimentación llega a tiempo para tomar acciones?
+            """,
+            "factores": [
+                "Indicadores de desempeño inadecuados",
+                "Errores en la recolección de datos",
+                "Falta de instrumentos de medición",
+                "Mala calibración de equipos de medición",
+                "Retraso en la retroalimentación de resultados"
+            ]
         },
         "🌍 Medio ambiente": {
-            "guia": "Pregunta: ¿Condiciones externas adversas? ¿Regulaciones?",
-            "factores": ["Condiciones inseguras", "Ruido/temperatura", "Regulaciones restrictivas", "Factores climáticos", "Cultura negativa"]
+            "guia": """
+            **Preguntas sugeridas:**  
+            - ¿Las condiciones físicas del lugar de trabajo (iluminación, ruido, temperatura) son adecuadas?  
+            - ¿Influyen factores externos (clima, normativas, situación económica)?  
+            - ¿La cultura organizacional favorece o dificulta la solución del problema?
+            """,
+            "factores": [
+                "Condiciones de trabajo inseguras",
+                "Ruido, temperatura o iluminación inadecuados",
+                "Regulaciones gubernamentales restrictivas",
+                "Factores climáticos o geográficos",
+                "Cultura organizacional negativa"
+            ]
         }
     }
     
@@ -512,7 +585,6 @@ with tabs[4]:
         st.pyplot(fig)
         
         st.subheader("Interpretación")
-        # Aquí puedes mantener tus interpretaciones previas, añado una para Ishikawa
         st.info("🐟 **Ishikawa:** Los promedios altos indican causas críticas que requieren atención prioritaria.")
         
         st.markdown("---")
