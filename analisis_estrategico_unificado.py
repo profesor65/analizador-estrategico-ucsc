@@ -101,12 +101,6 @@ with st.sidebar:
     st.caption("Responda cada afirmación según su percepción del sector o empresa.")
 
 # ============================================================
-# DICCIONARIOS (PORTER, PESTEL, etc.) - se mantienen igual
-# ============================================================
-PORTER_FACTORES = { ... }  # (aquí va el mismo contenido que tenías, no lo repito por brevedad)
-PESTEL_FACTORES = { ... }  # (si decides mantenerlo, pero ya no se usa realmente)
-
-# ============================================================
 # FUNCIÓN AUXILIAR PARA EJEMPLOS EN FODA
 # ============================================================
 def obtener_ejemplo(cuadrante, i):
@@ -120,16 +114,271 @@ def obtener_ejemplo(cuadrante, i):
     return lista[i-1] if i-1 < len(lista) else ""
 
 # ============================================================
-# FUNCIONES PARA MOSTRAR SECCIONES (Porter, PESTEL, FODA, Ishikawa)
+# FUNCIONES PARA MOSTRAR CADA SECCIÓN
 # ============================================================
-# (Aquí deben ir tus funciones mostrar_seccion_porter, mostrar_seccion_pestel, mostrar_seccion_foda, mostrar_seccion_ishikawa)
-# Ya las tienes definidas previamente, solo asegúrate de incluirlas tal cual estaban.
-# Voy a poner un marcador, pero en la práctica copia las que funcionaban.
 
-# ... (copia aquí tus funciones: mostrar_seccion_porter, mostrar_seccion_pestel, mostrar_seccion_foda, mostrar_seccion_ishikawa)
+def mostrar_seccion_porter():
+    st.header("🏛️ Análisis de las 5 Fuerzas de Porter")
+    st.markdown("Evalúe cada afirmación según la escala Likert (1 = Muy en desacuerdo, 5 = Muy de acuerdo).")
+    
+    # Diccionario de factores de Porter (igual al que tenías)
+    PORTER_FACTORES = {
+        "Amenaza de nuevos competidores": [
+            "Las economías de escala representan una barrera de entrada importante en este sector.",
+            "La lealtad de los clientes hacia las marcas existentes es alta.",
+            "Los costos de cambio para que un cliente cambie de proveedor son elevados.",
+            "Se requieren inversiones de capital muy altas para competir en este sector.",
+            "El acceso a los canales de distribución es muy difícil para un nuevo competidor.",
+            "La curva de aprendizaje y experiencia acumulada por las empresas actuales es una ventaja decisiva.",
+            "La regulación gubernamental dificulta la entrada de nuevos competidores.",
+            "Los productos o servicios actuales están altamente diferenciados.",
+            "El acceso a la tecnología clave está restringido a pocas empresas.",
+            "Las empresas establecidas tienen ventajas en costos no relacionadas con la escala (patentes, ubicación, etc.).",
+            "Las políticas gubernamentales (subsidios, aranceles) favorecen a los incumbentes."
+        ],
+        "Rivalidad entre competidores": [
+            "El número de competidores en el sector es muy elevado.",
+            "Existen fuertes barreras emocionales o de lealtad que reducen la rivalidad.",
+            "El crecimiento de la industria es muy bajo o nulo, lo que intensifica la lucha por participación.",
+            "Las guerras de precios son frecuentes y agresivas.",
+            "Las restricciones gubernamentales o sociales limitan las opciones competitivas.",
+            "Los costos de salida del sector (despidos, activos especializados) son muy altos.",
+            "Los márgenes de beneficio en la industria son muy ajustados."
+        ],
+        "Poder de negociación de proveedores": [
+            "Los proveedores tienen un poder de negociación muy elevado frente a las empresas del sector.",
+            "Los precios que fijan los proveedores son considerablemente altos.",
+            "La cantidad de insumos disponibles es limitada (oferta concentrada).",
+            "Los proveedores están ubicados en zonas lejanas, aumentando costos logísticos.",
+            "Existe un bajo grado de confianza y relación con los proveedores.",
+            "La relación con los proveedores es de confrontación o desfavorable.",
+            "El peligro de que los proveedores se integren hacia adelante (compitan directamente) es alto.",
+            "No existen insumos sustitutos viables para nuestra producción.",
+            "El costo de cambiar de proveedor es muy alto.",
+            "La calidad del producto del proveedor es difícilmente igualable."
+        ],
+        "Poder de negociación de compradores": [
+            "El costo de cambio para que un cliente cambie de proveedor es muy bajo.",
+            "El número de clientes importantes es reducido (alta concentración de compras).",
+            "Los compradores podrían integrarse hacia atrás fácilmente (fabricar ellos mismos).",
+            "Los compradores tienen gran facilidad para encontrar productos sustitutos.",
+            "La implicación emocional o importancia del producto para el cliente es baja.",
+            "El poder de negociación de los compradores es muy elevado."
+        ],
+        "Amenaza de productos sustitutos": [
+            "Existe gran disponibilidad de productos sustitutos cercanos.",
+            "El costo de cambio para el comprador hacia un sustituto es muy bajo.",
+            "Los productos sustitutos son muy agresivos en precios y promoción.",
+            "La relación valor-precio de los sustitutos es muy favorable comparada con nuestros productos."
+        ]
+    }
+    
+    respuestas = {}
+    for fuerza, lista_enunciados in PORTER_FACTORES.items():
+        st.subheader(f"🔹 {fuerza}")
+        cols = st.columns(2)
+        for idx, enunciado in enumerate(lista_enunciados):
+            key = f"porter_{fuerza}_{idx}"
+            if key not in st.session_state:
+                st.session_state[key] = 3
+            with cols[idx % 2]:
+                respuesta = st.select_slider(
+                    enunciado,
+                    options=[1, 2, 3, 4, 5],
+                    key=key,
+                    format_func=lambda x: {1:"1 - Muy en desacuerdo", 2:"2 - En desacuerdo", 3:"3 - Neutral", 4:"4 - De acuerdo", 5:"5 - Muy de acuerdo"}[x]
+                )
+                respuestas[f"{fuerza}: {enunciado[:50]}..."] = respuesta
+        st.markdown("---")
+    return respuestas
+
+def mostrar_seccion_pestel():
+    st.header("🌍 Análisis PESTEL del Macroentorno (Personalizado)")
+    st.markdown("""
+    **Instrucciones:**  
+    Para cada categoría, edita los factores (o escribe los tuyos propios) y asigna su importancia en la escala Likert.  
+    Puedes dejar campos vacíos si no necesitas usar los 5.  
+    La escala es:  
+    1 = Muy negativo/desfavorable, 2 = Negativo, 3 = Neutral, 4 = Positivo, 5 = Muy positivo/favorable.
+    """)
+    
+    respuestas = {}
+    pestel_predefinido = {
+        "Político": [
+            "La estabilidad política del país es alta y predecible.",
+            "Las políticas fiscales (impuestos) son favorables para el negocio.",
+            "Las políticas de comercio exterior son abiertas y facilitan la importación/exportación.",
+            "Las regulaciones laborales son flexibles y no encarecen excesivamente el empleo.",
+            "La presión de grupos de interés o lobby es baja o favorable."
+        ],
+        "Económico": [
+            "El crecimiento del PIB es alto y sostenido.",
+            "La tasa de inflación es baja y controlada.",
+            "El tipo de cambio es estable y competitivo para nuestras operaciones.",
+            "La tasa de desempleo es baja, lo que indica una economía saludable.",
+            "El acceso al crédito y financiamiento es amplio y con tasas razonables."
+        ],
+        "Social": [
+            "Los cambios demográficos (envejecimiento, migración) benefician nuestro mercado.",
+            "El nivel educativo de la población es alto y calificado.",
+            "Los estilos de vida y preferencias del consumidor están alineados con nuestra oferta.",
+            "La conciencia social y de salud es elevada y favorece nuestros productos.",
+            "La desigualdad en la distribución de la renta es baja, existiendo una clase media amplia."
+        ],
+        "Tecnológico": [
+            "La inversión en I+D e innovación en el sector es alta y constante.",
+            "El nivel de digitalización y automatización del sector es avanzado (Industria 4.0).",
+            "El acceso a internet y tecnologías de la información es universal y de alta velocidad.",
+            "La transferencia tecnológica desde universidades o centros de investigación es fluida.",
+            "La ciberseguridad y protección de datos están garantizadas por normas robustas."
+        ],
+        "Ecológico / Ambiental": [
+            "Las regulaciones ambientales son claras y no excesivamente costosas.",
+            "El cambio climático y eventos extremos tienen un impacto bajo en nuestras operaciones.",
+            "Los consumidores tienen una alta conciencia ecológica que favorece nuestra propuesta verde.",
+            "La disponibilidad de recursos naturales es abundante y a precios razonables.",
+            "Los costos de la energía sostenible son bajos o están subvencionados."
+        ],
+        "Legal": [
+            "La seguridad jurídica y cumplimiento de contratos son excelentes.",
+            "La protección de la propiedad intelectual (patentes, marcas) es fuerte.",
+            "Las leyes de competencia (antimonopolio) son efectivas y justas.",
+            "La legislación laboral es equilibrada y no genera conflictos.",
+            "Las leyes de protección al consumidor son rigurosas y nos benefician (generan confianza)."
+        ]
+    }
+    
+    guias = {
+        "Político": "🏛️ **Pista:** Analiza la estabilidad gubernamental, políticas fiscales, comercio exterior, regulaciones laborales y presión de grupos de interés.",
+        "Económico": "📈 **Pista:** Considera crecimiento del PIB, inflación, tipo de cambio, desempleo y acceso al crédito.",
+        "Social": "👥 **Pista:** Reflexiona sobre demografía, educación, estilos de vida, conciencia social y desigualdad.",
+        "Tecnológico": "💻 **Pista:** Evalúa I+D, digitalización, acceso a internet, transferencia tecnológica y ciberseguridad.",
+        "Ecológico / Ambiental": "🌿 **Pista:** Observa regulaciones ambientales, cambio climático, conciencia ecológica, disponibilidad de recursos y costos de energía sostenible.",
+        "Legal": "⚖️ **Pista:** Examina seguridad jurídica, propiedad intelectual, leyes de competencia, legislación laboral y protección al consumidor."
+    }
+    
+    for categoria, lista_factores in pestel_predefinido.items():
+        st.subheader(f"📌 {categoria}")
+        st.info(guias[categoria])
+        for i in range(1, 6):
+            text_key = f"pestel_text_{categoria}_{i}"
+            slider_key = f"pestel_slider_{categoria}_{i}"
+            if text_key not in st.session_state:
+                st.session_state[text_key] = lista_factores[i-1] if i-1 < len(lista_factores) else ""
+            if slider_key not in st.session_state:
+                st.session_state[slider_key] = 3
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                factor_texto = st.text_input(f"Factor {i}", value=st.session_state[text_key], key=text_key, placeholder="Escribe o modifica el factor")
+            with col2:
+                importancia = st.select_slider("Importancia", options=[1,2,3,4,5], value=st.session_state[slider_key], key=slider_key, label_visibility="collapsed")
+            if factor_texto.strip():
+                respuestas[f"{categoria}: {factor_texto.strip()}"] = importancia
+        st.markdown("---")
+    return respuestas
+
+def mostrar_seccion_foda():
+    st.header("⚡ Análisis FODA (Personalizado)")
+    st.markdown("""
+    **Instrucciones:**  
+    Escribe hasta **5 factores** para cada cuadrante (Fortalezas, Debilidades, Oportunidades, Amenazas).  
+    Luego, en el slider, indica la **importancia** de ese factor (1 = Nada importante, 5 = Muy importante).  
+    *Deja los campos de texto vacíos si no necesitas usar los 5.*
+    """)
+    respuestas = {}
+    cuadrantes = ["Fortalezas", "Debilidades", "Oportunidades", "Amenazas"]
+    guias = {
+        "Fortalezas": "🔍 **Pista:** Piensa en qué hace bien tu organización, qué recursos valiosos tienes, en qué eres mejor que la competencia.",
+        "Debilidades": "⚠️ **Pista:** Reflexiona sobre limitaciones internas, aspectos a mejorar, carencias de recursos o capacidades.",
+        "Oportunidades": "🌱 **Pista:** Observa tendencias externas favorables, necesidades insatisfechas, cambios en el mercado o regulaciones que te beneficien.",
+        "Amenazas": "⚡ **Pista:** Identifica factores externos que puedan perjudicarte: nuevos competidores, crisis económicas, cambios regulatorios adversos."
+    }
+    for cuadrante in cuadrantes:
+        st.subheader(f"📌 {cuadrante}")
+        st.info(guias[cuadrante])
+        for i in range(1, 6):
+            text_key = f"foda_text_{cuadrante}_{i}"
+            slider_key = f"foda_slider_{cuadrante}_{i}"
+            if text_key not in st.session_state:
+                st.session_state[text_key] = ""
+            if slider_key not in st.session_state:
+                st.session_state[slider_key] = 3
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                factor_texto = st.text_input(f"Factor {i}", value=st.session_state[text_key], key=text_key, placeholder=f"Ej. {obtener_ejemplo(cuadrante, i)}")
+            with col2:
+                importancia = st.select_slider("Importancia", options=[1,2,3,4,5], value=st.session_state[slider_key], key=slider_key, label_visibility="collapsed")
+            if factor_texto.strip():
+                respuestas[f"{cuadrante}: {factor_texto.strip()}"] = importancia
+        st.markdown("---")
+    return respuestas
+
+def mostrar_seccion_ishikawa():
+    st.header("🐟 Diagrama de Ishikawa (Causa-Efecto)")
+    st.markdown("""
+    **Instrucciones:**  
+    1. Define el **problema principal** (efecto) que deseas analizar.  
+    2. Para cada espina, escribe hasta **5 causas** y asigna su **importancia** (1 = Nada importante, 5 = Muy importante).  
+    3. Se mostrarán las causas más críticas.
+    """)
+    problema_key = "ishikawa_problema"
+    if problema_key not in st.session_state:
+        st.session_state[problema_key] = ""
+    problema = st.text_input("✏️ **Problema o efecto a analizar:**", value=st.session_state[problema_key], key=problema_key, placeholder="Ej. Baja productividad en el área de producción")
+    
+    espinas = {
+        "👥 Mano de obra": {
+            "guia": "Pregunta: ¿Falta de capacitación? ¿Baja motivación? ¿Rotación?",
+            "factores": ["Falta de capacitación", "Baja motivación", "Alta rotación", "Errores humanos", "Insuficiente personal"]
+        },
+        "🛠️ Maquinaria": {
+            "guia": "Pregunta: ¿Equipos obsoletos? ¿Falta de mantenimiento? ¿Paradas frecuentes?",
+            "factores": ["Equipos obsoletos", "Mantenimiento insuficiente", "Paradas frecuentes", "Herramientas inadecuadas", "Capacidad insuficiente"]
+        },
+        "📋 Método": {
+            "guia": "Pregunta: ¿Procedimientos ineficientes? ¿Falta de estandarización?",
+            "factores": ["Procedimientos no estandarizados", "Instrucciones poco claras", "Procesos complejos", "Falta de control", "Mala distribución"]
+        },
+        "📦 Materiales": {
+            "guia": "Pregunta: ¿Materia prima de baja calidad? ¿Problemas con proveedores?",
+            "factores": ["Materia prima baja calidad", "Proveedores poco confiables", "Desabastecimiento", "Exceso inventario", "Materiales inadecuados"]
+        },
+        "📏 Medición": {
+            "guia": "Pregunta: ¿Falta de indicadores? ¿Errores en medición?",
+            "factores": ["Indicadores inadecuados", "Errores en datos", "Falta instrumentos", "Mala calibración", "Retroalimentación tardía"]
+        },
+        "🌍 Medio ambiente": {
+            "guia": "Pregunta: ¿Condiciones externas adversas? ¿Regulaciones?",
+            "factores": ["Condiciones inseguras", "Ruido/temperatura", "Regulaciones restrictivas", "Factores climáticos", "Cultura negativa"]
+        }
+    }
+    
+    respuestas = {}
+    for espina, datos in espinas.items():
+        st.subheader(f"📌 {espina}")
+        st.info(datos["guia"])
+        for i in range(1, 6):
+            text_key = f"ishikawa_text_{espina}_{i}"
+            slider_key = f"ishikawa_slider_{espina}_{i}"
+            if text_key not in st.session_state:
+                st.session_state[text_key] = datos["factores"][i-1] if i-1 < len(datos["factores"]) else ""
+            if slider_key not in st.session_state:
+                st.session_state[slider_key] = 3
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                causa_texto = st.text_input(f"Causa {i}", value=st.session_state[text_key], key=text_key, placeholder="Escribe o modifica la causa")
+            with col2:
+                importancia = st.select_slider("Importancia", options=[1,2,3,4,5], value=st.session_state[slider_key], key=slider_key, label_visibility="collapsed")
+            if causa_texto.strip():
+                respuestas[f"{espina}: {causa_texto.strip()}"] = importancia
+        st.markdown("---")
+    
+    st.session_state.ishikawa_problema_final = problema
+    st.session_state.resp_ishikawa = respuestas
+    return respuestas
 
 # ============================================================
-# FUNCIÓN PARA GENERAR EXCEL (con Ishikawa)
+# FUNCIÓN PARA GENERAR EXCEL
 # ============================================================
 def generar_excel(respuestas_porter, respuestas_pestel, respuestas_foda, respuestas_ishikawa, nombre_est, nombre_prof, proyecto):
     data = []
@@ -160,7 +409,7 @@ def generar_excel(respuestas_porter, respuestas_pestel, respuestas_foda, respues
     return output.getvalue()
 
 # ============================================================
-# APLICACIÓN PRINCIPAL CON PESTAÑAS (CORREGIDO)
+# APLICACIÓN PRINCIPAL CON PESTAÑAS
 # ============================================================
 st.markdown("---")
 st.header("🧪 Seleccione el análisis a realizar")
@@ -177,52 +426,40 @@ if 'resp_foda' not in st.session_state:
 if 'resp_ishikawa' not in st.session_state:
     st.session_state.resp_ishikawa = {}
 
-# Pestaña PORTER
 with tabs[0]:
     st.session_state.resp_porter = mostrar_seccion_porter()
 
-# Pestaña PESTEL
 with tabs[1]:
     st.session_state.resp_pestel = mostrar_seccion_pestel()
 
-# Pestaña FODA
 with tabs[2]:
     st.session_state.resp_foda = mostrar_seccion_foda()
 
-# Pestaña ISHIKAWA
 with tabs[3]:
     st.session_state.resp_ishikawa = mostrar_seccion_ishikawa()
-    
-    # Resultados dentro de la misma pestaña
+    # Mostrar resultados de Ishikawa dentro de la misma pestaña
     if st.session_state.resp_ishikawa:
         st.markdown("---")
         st.subheader("📊 Resultados del análisis Ishikawa")
-        
-        # Promedio por espina
         espina_promedios = {}
         for clave, valor in st.session_state.resp_ishikawa.items():
             espina = clave.split(":")[0]
             if espina not in espina_promedios:
                 espina_promedios[espina] = []
             espina_promedios[espina].append(valor)
-        
         promedios = {e: sum(v)/len(v) for e, v in espina_promedios.items()}
-        
         col1, col2 = st.columns(2)
         with col1:
             st.metric("Problema analizado", st.session_state.get("ishikawa_problema_final", "No definido"))
         with col2:
             espina_critica = max(promedios, key=promedios.get) if promedios else "Ninguna"
             st.metric("Espina más crítica", espina_critica)
-        
         df_espinas = pd.DataFrame([{"Espina": e, "Importancia promedio": f"{p:.2f}/5"} for e, p in promedios.items()])
         st.dataframe(df_espinas, use_container_width=True, hide_index=True)
-        
         top_causas = sorted(st.session_state.resp_ishikawa.items(), key=lambda x: x[1], reverse=True)[:10]
         df_top = pd.DataFrame([{"Causa": c, "Importancia": v} for c, v in top_causas])
         st.subheader("🏆 Top 10 causas más importantes")
         st.dataframe(df_top, use_container_width=True, hide_index=True)
-        
         if top_causas:
             fig, ax = plt.subplots(figsize=(8, 5))
             causas = [c[:60] for c, _ in top_causas]
@@ -231,13 +468,12 @@ with tabs[3]:
             ax.set_xlim(0, 5.5)
             ax.set_xlabel("Importancia (1-5)")
             ax.set_title("Priorización de causas (Ishikawa)")
-            for i, (bar, val) in enumerate(zip(ax.patches, importancias)):
+            for bar, val in zip(ax.patches, importancias):
                 ax.text(bar.get_width() + 0.1, bar.get_y() + bar.get_height()/2, f"{val}", va='center')
             st.pyplot(fig)
     else:
         st.info("Complete las causas y asigne importancia para ver resultados.")
 
-# Pestaña RESULTADOS GLOBALES
 with tabs[4]:
     if not nombre_profesor:
         st.error("⚠️ Debe ingresar el nombre del profesor en la barra lateral para generar resultados.")
@@ -276,7 +512,7 @@ with tabs[4]:
         st.pyplot(fig)
         
         st.subheader("Interpretación")
-        # (Mantén tus interpretaciones, solo añade una para Ishikawa)
+        # Aquí puedes mantener tus interpretaciones previas, añado una para Ishikawa
         st.info("🐟 **Ishikawa:** Los promedios altos indican causas críticas que requieren atención prioritaria.")
         
         st.markdown("---")
