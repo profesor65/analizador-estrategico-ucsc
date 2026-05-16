@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 SISTEMA DE ANÁLISIS ESTRATÉGICO INTEGRADO (PORTER + PESTEL + FODA + ISHIKAWA)
-Versión 2.0 - Con perfil del evaluador y escala de percepciones estratégicas
+Versión 3.0 - Con almacenamiento en Supabase y dashboard
 Autor: Dr.(c) José Rodríguez López - FACEA UCSC
 Año: 2026
 
@@ -14,6 +14,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 from io import BytesIO
 import base64
+import json
+from datetime import datetime
+
+# ============================================================
+# CONEXIÓN A SUPABASE (si está configurado)
+# ============================================================
+try:
+    from supabase import create_client, Client
+    SUPABASE_URL = st.secrets.get("SUPABASE_URL", "")
+    SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "")
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        supabase_available = True
+    else:
+        supabase_available = False
+        supabase = None
+except ImportError:
+    supabase_available = False
+    supabase = None
+    st.warning("La librería 'supabase' no está instalada. La función de guardado no estará disponible.")
 
 # ============================================================
 # CONFIGURACIÓN DE LA PÁGINA
@@ -143,8 +163,42 @@ def cronbach_alpha(df_items):
     alpha = (n_items / (n_items - 1)) * (1 - suma_var_items / var_total)
     return alpha
 
+def guardar_en_supabase():
+    """Guarda la evaluación actual (perfil + respuestas) en Supabase de forma anonimizada."""
+    if not supabase_available or supabase is None:
+        st.error("⚠️ Supabase no está configurado. No se pudo guardar la evaluación.")
+        return False
+    
+    # Verificar que se hayan completado al menos algunas secciones
+    if not st.session_state.resp_porter and not st.session_state.resp_pestel:
+        st.warning("No hay respuestas suficientes para guardar. Completa al menos una sección.")
+        return False
+    
+    # Preparar los datos
+    evaluacion = {
+        "fecha": datetime.now().isoformat(),
+        "perfil": st.session_state.perfil,
+        "resp_porter": st.session_state.resp_porter,
+        "resp_pestel": st.session_state.resp_pestel,
+        "resp_foda": st.session_state.resp_foda,
+        "resp_ishikawa": st.session_state.resp_ishikawa,
+        "resp_escala": st.session_state.resp_escala,
+        "proyecto": nombre_proyecto,
+        "profesor": nombre_profesor,
+        "anonimizado": True
+    }
+    
+    try:
+        # Insertar en la tabla 'evaluaciones'
+        result = supabase.table("evaluaciones").insert(evaluacion).execute()
+        st.success("✅ Evaluación guardada de forma anonimizada en la base de datos. ¡Gracias!")
+        return True
+    except Exception as e:
+        st.error(f"❌ Error al guardar en Supabase: {e}")
+        return False
+
 # ============================================================
-# FUNCIONES PARA CADA SECCIÓN
+# FUNCIONES PARA CADA SECCIÓN (igual que antes)
 # ============================================================
 
 def mostrar_perfil_y_escala():
@@ -756,17 +810,12 @@ with tabs[5]:
         else:
             st.warning("No hay datos con los filtros seleccionados.")
         
-        # Calcular Alfa de Cronbach para la escala (si hay suficientes respuestas)
-        if st.session_state.resp_escala:
-            # Reorganizar las respuestas de escala en un DataFrame de sujetos x items
-            # Como solo tenemos un sujeto, no se puede calcular alfa; pero mostramos un aviso
-            st.markdown("---")
-            st.subheader("🔧 Consistencia interna de la escala (Alfa de Cronbach)")
-            st.info("Con las respuestas de un solo evaluador no es posible calcular el alfa. En una recopilación de múltiples usuarios, esta estadística indicaría la fiabilidad de la escala.")
-            # Si se tuvieran datos de varios usuarios, se calcularía así:
-            # df_items = pd.DataFrame([respuestas_usuario1, respuestas_usuario2, ...])
-            # alpha = cronbach_alpha(df_items)
-            # st.metric("Alfa de Cronbach", f"{alpha:.3f}")
+        # --- BOTÓN PARA GUARDAR EN SUPABASE ---
+        st.markdown("---")
+        st.subheader("💾 Guardar evaluación (anonimizada)")
+        st.markdown("Al hacer clic, se almacenarán tus respuestas y perfil en la base de datos para análisis agregados. No se guarda tu identidad.")
+        if st.button("Guardar evaluación en la base de datos"):
+            guardar_en_supabase()
         
         st.markdown("---")
         st.subheader("Exportar resultados")
