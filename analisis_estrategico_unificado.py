@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 SISTEMA DE ANÁLISIS ESTRATÉGICO INTEGRADO (PORTER + PESTEL + FODA + ISHIKAWA)
+Versión 2.0 - Con perfil del evaluador y escala de percepciones estratégicas
 Autor: Dr.(c) José Rodríguez López - FACEA UCSC
 Año: 2026
 
@@ -10,6 +11,7 @@ Año: 2026
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 from io import BytesIO
 import base64
 
@@ -67,7 +69,7 @@ st.markdown(
     """
     <div style="text-align: center; background-color: #1e3a5f; padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
         <h1 style="color: white;">📊 Analizador Estratégico Integrado</h1>
-        <h3 style="color: #ffd966;">PORTER · PESTEL · FODA · ISHIKAWA (Escala Likert 1-5)</h3>
+        <h3 style="color: #ffd966;">PORTER · PESTEL · FODA · ISHIKAWA · PERFIL + ESCALA</h3>
         <p style="color: #d9e2ef; font-size: 0.9rem;">
             <strong>Sistema creado por:</strong> Dr.(c) José Rodríguez López | FACEA UCSC - 2026<br>
             <strong>© Todos los derechos reservados. Prohibida la copia o modificación sin autorización.</strong>
@@ -77,7 +79,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Barra lateral
+# ============================================================
+# BARRA LATERAL: IDENTIFICACIÓN Y PERFIL
+# ============================================================
 with st.sidebar:
     st.header("📋 Identificación del trabajo")
     nombre_estudiante = st.text_input("Nombre del estudiante", value="", placeholder="Ej. María Pérez González")
@@ -86,6 +90,21 @@ with st.sidebar:
     
     if not nombre_profesor:
         st.warning("⚠️ Por favor ingrese el nombre del profesor para continuar.")
+    
+    st.markdown("---")
+    st.subheader("👤 Perfil del evaluador")
+    edad = st.selectbox("Rango de edad", ["18-25", "26-35", "36-45", "46-55", "56+"])
+    experiencia = st.selectbox("Años de experiencia en el sector", ["0-2", "3-5", "6-10", "11-20", "20+"])
+    carrera = st.selectbox("Formación académica principal", ["Ingeniería", "Administración", "Marketing", "Finanzas", "Derecho", "Otra"])
+    cargo = st.selectbox("Nivel de cargo actual", ["Directivo/Gerente", "Jefe de área", "Profesional especialista", "Analista/Operativo", "Otro"])
+    
+    # Almacenar perfil en session_state
+    st.session_state.perfil = {
+        "edad": edad,
+        "experiencia": experiencia,
+        "carrera": carrera,
+        "cargo": cargo
+    }
     
     st.markdown("---")
     st.subheader("📐 Escala Likert utilizada")
@@ -101,7 +120,7 @@ with st.sidebar:
     st.caption("Responda cada afirmación según su percepción del sector o empresa.")
 
 # ============================================================
-# FUNCIÓN AUXILIAR PARA EJEMPLOS EN FODA
+# FUNCIONES AUXILIARES
 # ============================================================
 def obtener_ejemplo(cuadrante, i):
     ejemplos = {
@@ -113,9 +132,91 @@ def obtener_ejemplo(cuadrante, i):
     lista = ejemplos.get(cuadrante, [""] * 5)
     return lista[i-1] if i-1 < len(lista) else ""
 
+def cronbach_alpha(df_items):
+    """Calcula el coeficiente Alfa de Cronbach para un DataFrame de ítems (filas = sujetos, columnas = ítems)"""
+    n_sujetos, n_items = df_items.shape
+    var_totales = df_items.var(axis=0, ddof=1)
+    suma_var_items = var_totales.sum()
+    var_total = df_items.sum(axis=1).var(ddof=1)
+    if var_total == 0:
+        return np.nan
+    alpha = (n_items / (n_items - 1)) * (1 - suma_var_items / var_total)
+    return alpha
+
 # ============================================================
-# FUNCIONES PARA MOSTRAR CADA SECCIÓN
+# FUNCIONES PARA CADA SECCIÓN
 # ============================================================
+
+def mostrar_perfil_y_escala():
+    st.header("🧑‍💼 Perfil del evaluador y Escala de percepciones")
+    
+    # Mostrar perfil ingresado
+    st.subheader("Datos del perfil")
+    perfil_df = pd.DataFrame([st.session_state.perfil])
+    st.dataframe(perfil_df, use_container_width=True, hide_index=True)
+    
+    st.markdown("---")
+    st.subheader("📏 Escala de percepciones estratégicas (basada en Hofstede)")
+    st.markdown("Indique su grado de acuerdo con cada afirmación según la escala Likert (1=Muy en desacuerdo, 5=Muy de acuerdo).")
+    
+    escala_items = {
+        "Aversión al riesgo": [
+            "Ante una decisión incierta, prefiero opciones seguras aunque den menos beneficio.",
+            "Me siento incómodo cuando no podemos predecir los resultados de una acción.",
+            "Invertir en proyectos con alto riesgo no vale la pena."
+        ],
+        "Orientación a la innovación": [
+            "La empresa debe adoptar nuevas tecnologías aunque no estén probadas.",
+            "Fomentar la experimentación es clave para el éxito.",
+            "Me gusta probar formas diferentes de hacer las cosas."
+        ],
+        "Distancia de poder (jerarquía)": [
+            "Las decisiones importantes deben tomarlas los altos directivos sin consultar.",
+            "Es mejor mantener la distancia entre jefes y subordinados.",
+            "El poder debe concentrarse en pocas manos."
+        ],
+        "Individualismo vs Colectivismo": [
+            "El éxito personal es más importante que el del equipo.",
+            "Cada cual debe resolver sus propios problemas laborales.",
+            "Prefiero trabajar individualmente que en equipo."
+        ]
+    }
+    
+    respuestas_escala = {}
+    for dimension, preguntas in escala_items.items():
+        st.subheader(f"🔹 {dimension}")
+        for i, p in enumerate(preguntas):
+            key = f"escala_{dimension}_{i}"
+            if key not in st.session_state:
+                st.session_state[key] = 3
+            valor = st.select_slider(
+                p, options=[1,2,3,4,5], key=key,
+                format_func=lambda x: {1:"1",2:"2",3:"3",4:"4",5:"5"}[x]
+            )
+            respuestas_escala[f"{dimension}: {p}"] = valor
+        st.markdown("---")
+    
+    # Guardar en session_state
+    st.session_state.resp_escala = respuestas_escala
+    
+    # Mostrar estadísticas descriptivas de la escala (si hay respuestas)
+    if respuestas_escala:
+        df_escala_temp = pd.DataFrame([respuestas_escala]).T
+        df_escala_temp.columns = ["Puntuación"]
+        st.subheader("📊 Resumen de tus respuestas")
+        st.dataframe(df_escala_temp, use_container_width=True)
+        
+        # Calcular promedios por dimensión
+        promedios_dim = {}
+        for dim in escala_items.keys():
+            items = [v for k, v in respuestas_escala.items() if k.startswith(dim)]
+            if items:
+                promedios_dim[dim] = np.mean(items)
+        if promedios_dim:
+            st.subheader("Promedio por dimensión")
+            st.bar_chart(promedios_dim)
+    
+    return respuestas_escala
 
 def mostrar_seccion_porter():
     st.header("🏛️ Análisis de las 5 Fuerzas de Porter")
@@ -321,7 +422,6 @@ def mostrar_seccion_ishikawa():
     3. Se mostrarán las causas más críticas.
     """)
     
-    # Nota sobre las preguntas sugeridas
     st.info("💡 **Nota:** Las preguntas que aparecen debajo de cada espina son **solo sugerencias** para guiar tu análisis. No es necesario responderlas todas; puedes adaptarlas o agregar otras que consideres relevantes.")
     
     problema_key = "ishikawa_problema"
@@ -451,19 +551,20 @@ def mostrar_seccion_ishikawa():
     return respuestas
 
 # ============================================================
-# FUNCIÓN PARA GENERAR EXCEL
+# FUNCIÓN PARA GENERAR EXCEL (actualizada)
 # ============================================================
-def generar_excel(respuestas_porter, respuestas_pestel, respuestas_foda, respuestas_ishikawa, nombre_est, nombre_prof, proyecto):
+def generar_excel(resp_porter, resp_pestel, resp_foda, resp_ishikawa, resp_escala, perfil, nombre_est, nombre_prof, proyecto):
     data = []
-    for k, v in respuestas_porter.items():
+    for k, v in resp_porter.items():
         data.append({"Sección": "Porter", "Factor/Enunciado": k, "Puntuación": v})
-    for k, v in respuestas_pestel.items():
+    for k, v in resp_pestel.items():
         data.append({"Sección": "PESTEL", "Factor/Enunciado": k, "Puntuación": v})
-    for k, v in respuestas_foda.items():
+    for k, v in resp_foda.items():
         data.append({"Sección": "FODA", "Factor/Enunciado": k, "Puntuación": v})
-    for k, v in respuestas_ishikawa.items():
+    for k, v in resp_ishikawa.items():
         data.append({"Sección": "Ishikawa", "Factor/Enunciado": k, "Puntuación": v})
-    df = pd.DataFrame(data)
+    
+    df_respuestas = pd.DataFrame(data)
     
     metadata = pd.DataFrame([
         ["Estudiante", nombre_est if nombre_est else "No especificado"],
@@ -473,21 +574,30 @@ def generar_excel(respuestas_porter, respuestas_pestel, respuestas_foda, respues
         ["Sistema creado por", "Dr.(c) José Rodríguez López - FACEA UCSC"]
     ], columns=["Campo", "Valor"])
     
+    df_perfil = pd.DataFrame([perfil])
+    
+    # Convertir respuestas de escala a DataFrame
+    df_escala = pd.DataFrame([resp_escala]).T.reset_index()
+    df_escala.columns = ["Ítem", "Puntuación"]
+    
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         metadata.to_excel(writer, sheet_name="Metadatos", index=False)
-        df.to_excel(writer, sheet_name="Respuestas Likert", index=False)
-        stats = df.groupby("Sección")["Puntuación"].agg(["mean", "median", "std"]).round(2)
+        df_respuestas.to_excel(writer, sheet_name="Respuestas Likert", index=False)
+        stats = df_respuestas.groupby("Sección")["Puntuación"].agg(["mean", "median", "std"]).round(2)
         stats.to_excel(writer, sheet_name="Estadísticas")
+        df_perfil.to_excel(writer, sheet_name="Perfil evaluador", index=False)
+        df_escala.to_excel(writer, sheet_name="Escala percepciones", index=False)
+    
     return output.getvalue()
 
 # ============================================================
-# APLICACIÓN PRINCIPAL CON PESTAÑAS
+# APLICACIÓN PRINCIPAL CON PESTAÑAS (nueva primera pestaña)
 # ============================================================
 st.markdown("---")
 st.header("🧪 Seleccione el análisis a realizar")
 
-tabs = st.tabs(["🏛️ PORTER", "🌍 PESTEL", "⚡ FODA", "🐟 ISHIKAWA", "📊 Resultados globales"])
+tabs = st.tabs(["🧑‍💼 Perfil y Escala", "🏛️ PORTER", "🌍 PESTEL", "⚡ FODA", "🐟 ISHIKAWA", "📊 Resultados globales"])
 
 # Inicializar variables de sesión
 if 'resp_porter' not in st.session_state:
@@ -498,17 +608,22 @@ if 'resp_foda' not in st.session_state:
     st.session_state.resp_foda = {}
 if 'resp_ishikawa' not in st.session_state:
     st.session_state.resp_ishikawa = {}
+if 'resp_escala' not in st.session_state:
+    st.session_state.resp_escala = {}
 
 with tabs[0]:
-    st.session_state.resp_porter = mostrar_seccion_porter()
+    mostrar_perfil_y_escala()
 
 with tabs[1]:
-    st.session_state.resp_pestel = mostrar_seccion_pestel()
+    st.session_state.resp_porter = mostrar_seccion_porter()
 
 with tabs[2]:
-    st.session_state.resp_foda = mostrar_seccion_foda()
+    st.session_state.resp_pestel = mostrar_seccion_pestel()
 
 with tabs[3]:
+    st.session_state.resp_foda = mostrar_seccion_foda()
+
+with tabs[4]:
     st.session_state.resp_ishikawa = mostrar_seccion_ishikawa()
     # Mostrar resultados de Ishikawa dentro de la misma pestaña
     if st.session_state.resp_ishikawa:
@@ -547,7 +662,7 @@ with tabs[3]:
     else:
         st.info("Complete las causas y asigne importancia para ver resultados.")
 
-with tabs[4]:
+with tabs[5]:
     if not nombre_profesor:
         st.error("⚠️ Debe ingresar el nombre del profesor en la barra lateral para generar resultados.")
     else:
@@ -587,6 +702,72 @@ with tabs[4]:
         st.subheader("Interpretación")
         st.info("🐟 **Ishikawa:** Los promedios altos indican causas críticas que requieren atención prioritaria.")
         
+        # --- NUEVA SECCIÓN: ANÁLISIS SEGMENTADO (con datos simulados) ---
+        st.markdown("---")
+        st.subheader("📊 Análisis segmentado (simulación con datos agregados)")
+        st.markdown("""
+        En una versión con múltiples evaluadores, sería posible filtrar y correlacionar los resultados según el perfil.  
+        A continuación se muestra un ejemplo interactivo con **datos simulados** de 100 evaluadores, para ilustrar el potencial.
+        """)
+        
+        # Generar datos simulados para demostración
+        np.random.seed(42)
+        n_sim = 100
+        cargos_sim = np.random.choice(["Directivo/Gerente", "Jefe de área", "Profesional especialista", "Analista/Operativo"], n_sim)
+        edades_sim = np.random.choice(["18-35", "36-50", "51+"], n_sim)
+        porter_sim = np.random.uniform(2, 5, n_sim)
+        # Simular respuestas de escala (promedio por evaluador)
+        aversion_riesgo_sim = np.random.uniform(1, 5, n_sim)
+        
+        df_sim = pd.DataFrame({
+            "cargo": cargos_sim,
+            "edad": edades_sim,
+            "porter_promedio": porter_sim,
+            "aversion_riesgo": aversion_riesgo_sim
+        })
+        
+        # Filtros
+        col_filt1, col_filt2 = st.columns(2)
+        with col_filt1:
+            cargos_sel = st.multiselect("Filtrar por cargo", options=df_sim["cargo"].unique(), default=df_sim["cargo"].unique())
+        with col_filt2:
+            edades_sel = st.multiselect("Filtrar por edad", options=df_sim["edad"].unique(), default=df_sim["edad"].unique())
+        
+        df_filt = df_sim[df_sim["cargo"].isin(cargos_sel) & df_sim["edad"].isin(edades_sel)]
+        
+        if len(df_filt) > 0:
+            fig2, ax2 = plt.subplots()
+            promedios_cargo = df_filt.groupby("cargo")["porter_promedio"].mean().sort_values()
+            promedios_cargo.plot(kind="barh", ax=ax2, color="teal")
+            ax2.set_xlabel("Porter promedio (1-5)")
+            ax2.set_title("Percepción de competitividad según cargo")
+            st.pyplot(fig2)
+            
+            fig3, ax3 = plt.subplots()
+            ax3.scatter(df_filt["aversion_riesgo"], df_filt["porter_promedio"], alpha=0.6, c="darkred")
+            ax3.set_xlabel("Aversión al riesgo (1-5)")
+            ax3.set_ylabel("Porter promedio")
+            ax3.set_title("Relación entre perfil de riesgo y evaluación Porter")
+            # Línea de tendencia
+            z = np.polyfit(df_filt["aversion_riesgo"], df_filt["porter_promedio"], 1)
+            p = np.poly1d(z)
+            ax3.plot(np.linspace(1,5,100), p(np.linspace(1,5,100)), "b--", alpha=0.8)
+            st.pyplot(fig3)
+        else:
+            st.warning("No hay datos con los filtros seleccionados.")
+        
+        # Calcular Alfa de Cronbach para la escala (si hay suficientes respuestas)
+        if st.session_state.resp_escala:
+            # Reorganizar las respuestas de escala en un DataFrame de sujetos x items
+            # Como solo tenemos un sujeto, no se puede calcular alfa; pero mostramos un aviso
+            st.markdown("---")
+            st.subheader("🔧 Consistencia interna de la escala (Alfa de Cronbach)")
+            st.info("Con las respuestas de un solo evaluador no es posible calcular el alfa. En una recopilación de múltiples usuarios, esta estadística indicaría la fiabilidad de la escala.")
+            # Si se tuvieran datos de varios usuarios, se calcularía así:
+            # df_items = pd.DataFrame([respuestas_usuario1, respuestas_usuario2, ...])
+            # alpha = cronbach_alpha(df_items)
+            # st.metric("Alfa de Cronbach", f"{alpha:.3f}")
+        
         st.markdown("---")
         st.subheader("Exportar resultados")
         excel_data = generar_excel(
@@ -594,6 +775,8 @@ with tabs[4]:
             st.session_state.resp_pestel,
             st.session_state.resp_foda,
             st.session_state.resp_ishikawa,
+            st.session_state.get("resp_escala", {}),
+            st.session_state.get("perfil", {}),
             nombre_estudiante,
             nombre_profesor,
             nombre_proyecto
